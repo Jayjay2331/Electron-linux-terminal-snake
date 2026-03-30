@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Terminal Snake → GUI Snake</title>
+<style>
+  body {
+    background-color: black;
+    color: white;
+    font-family: monospace;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+  canvas {
+    background-color: #111;
+    display: block;
+    margin: 20px auto;
+    border: 2px solid #fff;
+  }
+  h1 {
+    color: lime;
+  }
+</style>
+</head>
+<body>
+<h1>Snake Game 🐍</h1>
+<canvas id="game" width="600" height="400"></canvas>
+<p>Arrow Keys / WASD to move | P: Pause | R: Restart</p>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const CELL_SIZE = 20;
+const ROWS = canvas.height / CELL_SIZE;
+const COLS = canvas.width / CELL_SIZE;
+
+let snake = [
+  { x: 5, y: 10 },
+  { x: 6, y: 10 },
+  { x: 7, y: 10 }
+];
+let dir = { x: 1, y: 0 };
+let nextDir = { x: 1, y: 0 };
+let food = spawnFood();
+let score = 0;
+let paused = false;
+let over = false;
+let speed = 4; // FPS
+
+function spawnFood() {
+  let x, y;
+  do {
+    x = Math.floor(Math.random() * COLS);
+    y = Math.floor(Math.random() * ROWS);
+  } while (snake.some(s => s.x === x && s.y === y));
+  return { x, y };
+}
+
+function drawCell(x, y, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+  ctx.strokeStyle = 'black';
+  ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+}
+
+function drawSnake() {
+  for (let i = 0; i < snake.length; i++) {
+    const s = snake[i];
+    // Head with tongue
+    if (i === snake.length - 1) {
+      let tongueX = s.x + dir.x;
+      let tongueY = s.y + dir.y;
+      drawCell(s.x, s.y, 'lime'); // green snake
+      if (tongueX >= 0 && tongueX < COLS && tongueY >= 0 && tongueY < ROWS)
+        drawCell(tongueX, tongueY, 'red'); // red tongue
+    } else {
+      drawCell(s.x, s.y, 'lime');
+    }
+  }
+}
+
+function step() {
+  if (paused || over) return;
+
+  dir = nextDir;
+
+  const head = snake[snake.length - 1];
+  let nx = head.x + dir.x;
+  let ny = head.y + dir.y;
+
+  // Wrap around edges
+  if (nx < 0) nx = COLS - 1;
+  if (nx >= COLS) nx = 0;
+  if (ny < 0) ny = ROWS - 1;
+  if (ny >= ROWS) ny = 0;
+
+  // Collision with self
+  if (snake.some(s => s.x === nx && s.y === ny)) {
+    over = true;
+    return;
+  }
+
+  snake.push({ x: nx, y: ny });
+
+  // Eat food
+  if (nx === food.x && ny === food.y) {
+    score++;
+    food = spawnFood();
+  } else {
+    snake.shift();
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw food
+  drawCell(food.x, food.y, 'red');
+
+  // Draw snake
+  drawSnake();
+
+  // Draw score
+  ctx.fillStyle = 'white';
+  ctx.font = '16px monospace';
+  ctx.fillText(`Score: ${score}`, 10, 20);
+
+  if (paused) {
+    ctx.fillStyle = 'yellow';
+    ctx.fillText('PAUSED', canvas.width / 2 - 30, canvas.height / 2);
+  }
+  if (over) {
+    ctx.fillStyle = 'red';
+    ctx.fillText('GAME OVER', canvas.width / 2 - 50, canvas.height / 2);
+    ctx.fillText('Press R to restart', canvas.width / 2 - 70, canvas.height / 2 + 20);
+  }
+}
+
+function gameLoop() {
+  step();
+  draw();
+}
+
+setInterval(gameLoop, 1000 / speed);
+
+// Input handling
+document.addEventListener('keydown', e => {
+  switch(e.key) {
+    case 'ArrowUp': case 'w': nextDir = {x:0, y:-1}; break;
+    case 'ArrowDown': case 's': nextDir = {x:0, y:1}; break;
+    case 'ArrowLeft': case 'a': nextDir = {x:-1, y:0}; break;
+    case 'ArrowRight': case 'd': nextDir = {x:1, y:0}; break;
+    case 'p': paused = !paused; break;
+    case 'r':
+      // Restart
+      snake = [
+        { x: 5, y: 10 },
+        { x: 6, y: 10 },
+        { x: 7, y: 10 }
+      ];
+      dir = { x: 1, y: 0 };
+      nextDir = { x: 1, y: 0 };
+      food = spawnFood();
+      score = 0;
+      over = false;
+      paused = false;
+      break;
+  }
+});
+</script>
+</body>
+</html>

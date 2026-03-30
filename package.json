@@ -1,0 +1,23 @@
+{
+  "name": "terminal-snake",
+  "version": "1.0.0",
+  "description": "A terminal snake game packaged with Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "author": "SG_BABYJAYSO",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^26.2.0",
+    "electron-builder": "^24.6.0"
+  },
+  "build": {
+    "appId": "com.sgstudios.terminal-snake",
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Game"
+    }
+  }
+}
